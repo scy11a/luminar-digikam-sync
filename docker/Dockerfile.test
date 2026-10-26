@@ -1,0 +1,8 @@
+ARG PY=3.12
+FROM python:${PY}-slim
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libimage-exiftool-perl \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /w
+ENV PYTHONDONTWRITEBYTECODE=1
+CMD ["python", "-m", "unittest", "discover", "-s", "tests", "-v"]
