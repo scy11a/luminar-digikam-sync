@@ -15,19 +15,25 @@ Luminar Neo is a good editor, but it has no real asset management and no way to 
 
 There is a command-line tool (`luminar_sync.py`, Python standard library only) and an optional native macOS app (SwiftUI) on top of it.
 
-> **Unofficial.** The Luminar catalog format is not documented, and writing to it is not supported by Skylum. The tool refuses to run against an untested catalog version, keeps backups and can undo every write. Still, keep your own backups and use it at your own risk.
+## Disclaimer
+
+This is an independent, unofficial project. It is **not affiliated with, endorsed by or sponsored by** Skylum, the maker of Luminar Neo, or the digiKam project and KDE, and it is not connected to them in any way. Luminar, Luminar Neo and Skylum are trademarks of Skylum; digiKam and the other product names mentioned are trademarks of their respective owners. They are used here only to describe what the software works with.
+
+The project is published **for learning purposes**, in the hope that it helps others facing the same problem. It is provided **"as is", without warranty of any kind** (see the [MIT License](LICENSE)). **The authors accept no responsibility or liability** for any damage, data loss or other problems arising from its use.
+
+The Luminar catalog format is undocumented, and writing to it is not supported by Skylum. The tool refuses to run against an untested catalog version, keeps backups and can undo every write. Still, keep your own backups of your catalog and photo library, and use the tool at your own risk.
 
 ## Tested with
 
 | | Version |
 |---|---|
 | macOS | 27 |
-| Luminar Neo | 1.28.1 (catalog schema `user_version` 155) |
+| Luminar Neo | 1.28.1 (catalog schema 155); 1.29.0 (schema 156, same tables; writing back verified in Luminar only with 1.28) |
 | digiKam | 9.1.0 |
 | exiftool | 13.58 (bundled with digiKam) |
 | Python | 3.9 (the system `/usr/bin/python3`) and 3.12 |
 
-Other versions may work, but a different Luminar catalog schema is rejected until the tool has been checked against it (see `SUPPORTED_SCHEMA` in `luminar_sync.py`).
+Other versions may work, but a different Luminar catalog schema is rejected until the tool has been checked against it (see `SUPPORTED_SCHEMAS` in `luminar_sync.py`).
 
 ## Requirements
 

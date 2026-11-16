@@ -402,6 +402,18 @@ class SyncTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("unknown Luminar catalog version", out)
 
+    def test_accepts_luminar_1_29_schema(self):
+        con = sqlite3.connect(self.fx["catalog"])
+        con.execute("PRAGMA user_version = 156")  # Luminar Neo 1.29: same tables, new version number
+        con.commit()
+        con.close()
+        code, out = self.run_tool()
+        self.assertEqual(code, 0, out)
+        self.assertIn("a_rejected.jpg  flag: – → Rejected", out)
+        code, out = self.run_tool("--apply", "--prefer", "digikam")  # writing the catalog works as well
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self.luminar_values("e_conflict.jpg"), (2, 0))
+
     def test_audit(self):
         code, out = self.run_tool("--audit", paths=[])
         self.assertEqual(code, 0, out)

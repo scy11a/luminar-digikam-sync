@@ -32,7 +32,9 @@ EXIFTOOL_CANDIDATES = (
     "/Applications/digiKam.org/digikam.app/Contents/bin/exiftool",
     "/Applications/Luminar Neo.app/Contents/Frameworks/SLFoundation.framework/Resources/exiftool",
 )
-SUPPORTED_SCHEMA = 155  # Luminar Neo 1.28 catalog (PRAGMA user_version)
+# Luminar catalog schema versions (PRAGMA user_version) the tool has been checked against.
+# 1.29 bumped the version without changing any table definition.
+SUPPORTED_SCHEMAS = {155: "Luminar Neo 1.28", 156: "Luminar Neo 1.29"}
 
 # digiKam pick label values (Xmp.digiKam.PickLabel)
 PICK_NONE, PICK_REJECTED, PICK_PENDING, PICK_ACCEPTED = 0, 1, 2, 3
@@ -196,6 +198,7 @@ class Catalog:
     entries: list[LuminarEntry]
     roots: list[str]  # absolute paths of the Luminar folders
     path: Path | None = None
+    schema: int = 0  # PRAGMA user_version when the catalog was read
 
     def live_by_path(self) -> dict[str, LuminarEntry]:
         return {e.path: e for e in self.entries if e.live}
@@ -216,9 +219,10 @@ def load_luminar(catalog: Path, tmpdir: str) -> Catalog:
     con = open_snapshot(catalog, tmpdir)
     try:
         version = con.execute("PRAGMA user_version").fetchone()[0]
-        if version != SUPPORTED_SCHEMA:
+        if version not in SUPPORTED_SCHEMAS:
+            supported = ", ".join(f"{v} ({name})" for v, name in sorted(SUPPORTED_SCHEMAS.items()))
             raise SyncError(
-                f"unknown Luminar catalog version ({version}, expected: {SUPPORTED_SCHEMA}); "
+                f"unknown Luminar catalog version {version} (supported: {supported}); "
                 "Luminar was probably updated, the tool has to be checked against the new version first"
             )
         mounts = {vid: _mount_point(info) for vid, info in con.execute("SELECT _id_int_64, info_wide_ch FROM volumes")}
@@ -268,7 +272,7 @@ def load_luminar(catalog: Path, tmpdir: str) -> Catalog:
                 marker=marker,
             )
         )
-    return Catalog(entries, root_paths, catalog)
+    return Catalog(entries, root_paths, catalog, version)
 
 
 def load_digikam(db: Path | None, tmpdir: str) -> dict[str, tuple[int, int]]:
@@ -731,7 +735,7 @@ def write_luminar(catalog: Catalog, pulls: list[Item], backup_dir: Path) -> list
     log = []
     con = sqlite3.connect(str(catalog.path), isolation_level=None, timeout=5)
     try:
-        if con.execute("PRAGMA user_version").fetchone()[0] != SUPPORTED_SCHEMA:
+        if con.execute("PRAGMA user_version").fetchone()[0] != catalog.schema:
             raise SyncError("the Luminar catalog version changed in the meantime")
         con.execute("BEGIN IMMEDIATE")
         try:

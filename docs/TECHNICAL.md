@@ -1,10 +1,12 @@
 # Technical notes
 
-What was found out while building this tool. Unless noted otherwise, everything was verified on macOS 27 with Luminar Neo 1.28.1, digiKam 9.1.0 and exiftool 13.58. None of it is official documentation.
+What was found out while building this tool. Unless noted otherwise, everything was verified on macOS 27 with Luminar Neo 1.28.1 (the catalog schema was re-checked with 1.29.0), digiKam 9.1.0 and exiftool 13.58. None of it is official documentation.
 
 ## Luminar Neo catalog
 
-**Location.** The active catalog is a SQLite file, e.g. `~/Pictures/<name>/<name>.luminarneo`. Its path is stored in the preference `MPDAMCurrentCatalogContentsFilePathKey` of `~/Library/Preferences/com.skylum.luminarneo.plist`. The journal mode is `delete` (not WAL). `PRAGMA user_version` is `155` for Luminar Neo 1.28.
+**Location.** The active catalog is a SQLite file, e.g. `~/Pictures/<name>/<name>.luminarneo`. Its path is stored in the preference `MPDAMCurrentCatalogContentsFilePathKey` of `~/Library/Preferences/com.skylum.luminarneo.plist`. The journal mode is `delete` (not WAL). `PRAGMA user_version` is `155` for Luminar Neo 1.28 and `156` for 1.29.
+
+**Version 1.29** changed no table or index definition: only `user_version`, and with it `settings.db_version`, went from 155 to 156. Flags, ratings and the path tables kept their meaning. The tool keeps a list of the schema versions it has been checked against and refuses any other; after a Luminar update, compare `sqlite_master` with the previous version before adding the new number.
 
 **Flags and ratings** live in `image_user_attributes`, one row per image (`_out_id_int_64` → `images._id_int_64`):
 
@@ -38,7 +40,7 @@ volumes.info_wide_ch   JSON, key "kMountPointSerializationKey"   e.g. "/" or "/V
 - The cloud sync columns (`cloud_id_wide_ch`, `sync_status`, `updated_at_int_64`) were unused in the tested catalog.
 - `cache_db.db` holds previews; `~/Library/Application Support/com.skylum.luminarneo/Entities` holds thumbnails and presets. Neither holds flags or ratings.
 
-**Writing the catalog.** Updating `marker` and `rating` while Luminar is **closed** works: Luminar shows the new values at its next start. This was tried on a copy of the catalog opened via *File → Open Catalog* before touching the real one. While Luminar is running it keeps the catalog in memory and writes it continuously, so external changes are unsafe. Luminar also keeps its own `.lumBackup` copies in the catalog's `Backups` folder.
+**Writing the catalog.** Updating `marker` and `rating` while Luminar is **closed** works: Luminar shows the new values at its next start (verified with 1.28; 1.29 uses identical tables). This was tried on a copy of the catalog opened via *File → Open Catalog* before touching the real one. While Luminar is running it keeps the catalog in memory and writes it continuously, so external changes are unsafe. Luminar also keeps its own `.lumBackup` copies in the catalog's `Backups` folder.
 
 ## digiKam
 
